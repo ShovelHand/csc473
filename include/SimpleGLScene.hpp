@@ -13,9 +13,14 @@ public:
     ~SimpleGLScene();
 
     void renderScene() override;
+	void updateScene(double time) override;
 
 private:
 	LinearSpring m_linSpring;
+
+	float mAnimTime;
+	float mLastTime;
+	float mTick;
 };
 
 #endif
