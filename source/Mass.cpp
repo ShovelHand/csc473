@@ -5,7 +5,8 @@
 
 /*ctor*/
 Mass::Mass() :
-m_fmass(1.0)  //TODO: should have gui functionality to make this user set
+m_fmass(1.0),  //TODO: should have gui functionality to make this user set
+mModelPosition(.5, 0, 0)
 {
 	USING_ATLAS_GL_NS;
 
@@ -14,12 +15,12 @@ m_fmass(1.0)  //TODO: should have gui functionality to make this user set
 
 	GLfloat vertices[] =  //TODO: figure out how to handle vertices.
 	{//hexagon shape
-		-0.5f, 0.0f,
+		-0.1f, 0.0f,
 		0.0f, 0.0f,
-		0.2f,-0.1f,
+		0.1f,-0.1f,
 		0.0f, -0.2f,
-		-0.5f, -0.2f,
-		-0.7f,-0.1f
+		-0.1f, -0.2f,
+		-0.2f,-0.1f
 		
 	};
 
@@ -62,20 +63,29 @@ Mass::~Mass()
 	glDeleteBuffers(1, &mBuffer);
 }
 
-void Mass::renderGeometry(atlas::math::Matrix4 projection,
-	atlas::math::Matrix4 view)
+void Mass::renderGeometry()
 {
-	// To avoid warnings from unused variables, you can use the 
-	// UNUSED macro.
-	UNUSED(projection);
-	UNUSED(view);
 
 	// Enable the shaders.
 	mShaders[0]->enableShaders();
 
 	glBindVertexArray(mVao);
+
+	//load transformations
+	auto mMat = mModel;
+	glUniformMatrix4fv(mUniforms["Mat"], 1, GL_FALSE, &mMat[0][0]);
+
 	glDrawArrays(GL_LINE_LOOP, 0, 6);
 
 	// Disable them.
 	mShaders[0]->disableShaders();
+}
+
+void Mass::SetPos(atlas::math::Vector xyz)
+{
+	USING_ATLAS_GL_NS;
+	USING_ATLAS_MATH_NS;
+
+	mModelPosition.x = xyz.x; mModelPosition.y = xyz.y;
+	mModel = glm::translate(Matrix4(1.0f), mModelPosition);
 }

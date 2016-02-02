@@ -5,14 +5,19 @@
 
 #include <atlas/core/Float.hpp>
 #include <atlas/core/Log.hpp>
+#include <math.h>
 
 /*ctor*/
 LinearSpring::LinearSpring() :
-m_fk(1.0), //TODO: make spring constant gui settable by user.
+m_fk(1.0),
+m_fRestLength(1.0f), //spring's resting length
+m_fLength(1.0f), //spring's current length given forces
+m_fDamping(0.1f),
 mRefPosition(1, 1, 0),
 mModelVelocity(0),
-mModelPosition(0, 0, 0),
-mModelOldPosition(-6, 1, 0)
+mSpringScalar(1.0, 1.0, 1.0),
+mModelPosition(.5, -0.1, 0),
+mModelOldPosition(1.0, 1.0, 0)
 {
 	USING_ATLAS_GL_NS;
 	USING_ATLAS_MATH_NS;
@@ -30,8 +35,8 @@ mModelOldPosition(-6, 1, 0)
 	// Now set up the information for our shaders.
 	std::vector<ShaderInfo> shaders
 	{
-		ShaderInfo{ GL_VERTEX_SHADER, shaderDir + "vlinearSpring.glsl" },
-		ShaderInfo{ GL_FRAGMENT_SHADER, shaderDir + "flinearSpring.glsl" }
+		ShaderInfo{ GL_VERTEX_SHADER, shaderDir + "linearSpring.vs.glsl" },
+		ShaderInfo{ GL_FRAGMENT_SHADER, shaderDir + "linearSpring.fs.glsl" }
 	};
 
 	// Create a new shader and add it to our list.
@@ -73,6 +78,8 @@ mModelOldPosition(-6, 1, 0)
 	// Disable at the end to avoid mixing shaders.
 	mShaders[0]->disableShaders();
 
+	mass.SetPos(Vector(-0.3, -0.1,0.0)*mModelPosition); //make mass appear to hang from end of spring
+
 }
 
 /*dtor*/
@@ -87,8 +94,8 @@ void LinearSpring::updateGeometry(atlas::utils::Time const& t)
 	USING_ATLAS_MATH_NS;
 
 	//CODE GOES HERE
-//	EulerIntegrator(t);
-//	mModel = glm::translate(Matrix4(1.0f), mModelPosition);
+	EulerIntegrator(t);
+	mModel = glm::scale(Matrix4(1.0f), mSpringScalar);
 }
 
 void LinearSpring::renderGeometry()
@@ -110,10 +117,12 @@ void LinearSpring::renderGeometry()
 	mShaders[0]->disableShaders();
 
 	//draw the weight at the end of the spring
-	//mass.renderGeometry(projection, view);
+	mass.renderGeometry();
 }
 
 void LinearSpring::EulerIntegrator(atlas::utils::Time const& t)
 {
-	mModelPosition += cos(t.deltaTime);
+	float LoadForce = mass.GetMass() * 9.81f;
+	float SpringForce = m_fk * (m_fLength - m_fRestLength) - m_fDamping;
+	mSpringScalar.y -= ((LoadForce - SpringForce) + t.deltaTime)/100.f;
 }

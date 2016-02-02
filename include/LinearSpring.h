@@ -24,12 +24,16 @@ private:
 
 	//parameters that will influence the simulation
 	float m_fk;  //spring constant
-//	Mass mass;
+	float m_fRestLength;
+	float m_fLength;
+	float m_fDamping;
+	Mass mass;
 	
 	atlas::math::Vector mRefPosition;
 	atlas::math::Vector mModelVelocity;
 	atlas::math::Vector mModelPosition;
 	atlas::math::Vector mModelOldPosition;
+	atlas::math::Vector mSpringScalar;
 	atlas::math::Vector mForce;
 
 	atlas::math::Matrix4 mRefMatrix;

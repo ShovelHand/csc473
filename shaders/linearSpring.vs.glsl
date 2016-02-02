@@ -2,7 +2,7 @@
 
 layout(location = 0) in vec4 vPosition;
 
-uniform mat4 Mat;
+uniform mat4 Mat; //compound transform matrix
 
 void main()
 {

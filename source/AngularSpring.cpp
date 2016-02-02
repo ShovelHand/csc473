@@ -41,6 +41,7 @@ mModelOldPosition(-6, 1, 0)
 		- 0.8f, 0.0f
 	};
 
+//	mass.SetPos(Vector(-0.8f, 0.0f,0.0f));
 	glGenBuffers(1, &mBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -100,13 +101,18 @@ void AngularSpring::renderGeometry(atlas::math::Matrix4 projection,
 	mShaders[0]->enableShaders();
 
 	glBindVertexArray(mVao);
+
+	//load transformations
+	auto mMat = mModel;
+	glUniformMatrix4fv(mUniforms["Mat"], 1, GL_FALSE, &mMat[0][0]);
+
 	glDrawArrays(GL_LINE_STRIP, 0, 11);
 
 	// Disable them.
 	mShaders[0]->disableShaders();
 
 	//draw the weight at the end of the spring
-	mass.renderGeometry(projection, view);
+	mass.renderGeometry();
 }
 
 void AngularSpring::EulerIntegrator(atlas::utils::Time const& t)
