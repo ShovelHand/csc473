@@ -5,6 +5,7 @@
 
 #include <atlas/utils/Scene.hpp>
 #include "LinearSpring.h"
+#include "AngularSpring.h"
 
 class SimpleGLScene : public atlas::utils::Scene
 {
@@ -17,6 +18,7 @@ public:
 
 private:
 	LinearSpring m_linSpring;
+	AngularSpring m_angSpring;
 
 	float mAnimTime;
 	float mLastTime;

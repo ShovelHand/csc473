@@ -20,6 +20,7 @@ private:
 	GLuint mVao;
 	GLuint mBuffer;
 
+	atlas::math::Matrix4 mRefMatrix;
 	//parameters that will influence the simulation
 	float m_fmass; //the mass on the end of the string;
 	float xPos; float yPos;

@@ -5,7 +5,7 @@
 #include <atlas/core/Float.hpp>
 SimpleGLScene::SimpleGLScene() :
 mLastTime(0.0f),
-mTick(0.1f),
+mTick(1.0f/60.0f),
 mAnimTime(0.0f)
 {
     // Initialize the matrices to identities.
@@ -18,8 +18,9 @@ SimpleGLScene::~SimpleGLScene()
 
 void SimpleGLScene::updateScene(double time)
 {
-	mTime.currentTime = (float)time;
+	mTime.deltaTime = (float)time - mTime.currentTime;
 	mTime.totalTime += (float)time;
+	mTime.currentTime = (float)time;
 
 	if (atlas::core::geq(mTime.currentTime - mLastTime, mTick))
 	{
@@ -35,6 +36,6 @@ void SimpleGLScene::renderScene()
 {
 	glClearColor(1.0f, 1.0f, 1.0f,0);
     glClear(GL_COLOR_BUFFER_BIT);
-
-	m_linSpring.renderGeometry(mProjection, mView);
+	
+	m_linSpring.renderGeometry();
 }

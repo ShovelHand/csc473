@@ -1,4 +1,4 @@
-#include "LinearSpring.h"
+#include "AngularSpring.h"
 #pragma once
 #include "ShaderPaths.hpp"
 #include <atlas/core/Macros.hpp>
@@ -7,11 +7,11 @@
 #include <atlas/core/Log.hpp>
 
 /*ctor*/
-LinearSpring::LinearSpring() :
+AngularSpring::AngularSpring() :
 m_fk(1.0), //TODO: make spring constant gui settable by user.
-mRefPosition(1, 1, 0),
+mRefPosition(6, 1, 0),
 mModelVelocity(0),
-mModelPosition(0, 0, 0),
+mModelPosition(-6, 1, 0),
 mModelOldPosition(-6, 1, 0)
 {
 	USING_ATLAS_GL_NS;
@@ -23,29 +23,6 @@ mModelOldPosition(-6, 1, 0)
 	//original position
 	mRefMatrix = glm::translate(Matrix4(1.0f), mRefPosition);
 	mModel = glm::translate(Matrix4(1.0f), mModelPosition);
-
-	// Get the path where our shaders are stored.
-	std::string shaderDir = generated::ShaderPaths::getShaderDirectory();
-
-	// Now set up the information for our shaders.
-	std::vector<ShaderInfo> shaders
-	{
-		ShaderInfo{ GL_VERTEX_SHADER, shaderDir + "vlinearSpring.glsl" },
-		ShaderInfo{ GL_FRAGMENT_SHADER, shaderDir + "flinearSpring.glsl" }
-	};
-
-	// Create a new shader and add it to our list.
-	mShaders.push_back(ShaderPointer(new Shader));
-
-	// Compile the shaders.
-	mShaders[0]->compileShaders(shaders);
-
-	// And link them.
-	mShaders[0]->linkShaders();
-
-	GLuint mMat = mShaders[0]->getUniformVariable("Mat");
-	mUniforms.insert(UniformKey("Mat", mMat));
-
 
 	GLfloat vertices[] =
 	{
@@ -63,9 +40,29 @@ mModelOldPosition(-6, 1, 0)
 		-0.9f, 0.0f
 		- 0.8f, 0.0f
 	};
+
 	glGenBuffers(1, &mBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// Get the path where our shaders are stored.
+	std::string shaderDir = generated::ShaderPaths::getShaderDirectory();
+
+	// Now set up the information for our shaders.
+	std::vector<ShaderInfo> shaders
+	{
+		ShaderInfo{ GL_VERTEX_SHADER, shaderDir + "AngularSpring.vs.glsl" },
+		ShaderInfo{ GL_FRAGMENT_SHADER, shaderDir + "AngularSpring.fs.glsl" }
+	};
+
+	// Create a new shader and add it to our list.
+	mShaders.push_back(ShaderPointer(new Shader));
+
+	// Compile the shaders.
+	mShaders[0]->compileShaders(shaders);
+
+	// And link them.
+	mShaders[0]->linkShaders();
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
@@ -76,44 +73,43 @@ mModelOldPosition(-6, 1, 0)
 }
 
 /*dtor*/
-LinearSpring::~LinearSpring()
+AngularSpring::~AngularSpring()
 {
 	glDeleteVertexArrays(1, &mVao);
 	glDeleteBuffers(1, &mBuffer);
 }
 
-void LinearSpring::updateGeometry(atlas::utils::Time const& t)
+void AngularSpring::updateGeometry(atlas::utils::Time const& t)
 {
 	USING_ATLAS_MATH_NS;
 
 	//CODE GOES HERE
-//	EulerIntegrator(t);
-//	mModel = glm::translate(Matrix4(1.0f), mModelPosition);
+	EulerIntegrator(t);
+	mModel = glm::translate(Matrix4(1.0f), mModelPosition);
 }
 
-void LinearSpring::renderGeometry()
+void AngularSpring::renderGeometry(atlas::math::Matrix4 projection,
+	atlas::math::Matrix4 view)
 {
 	// To avoid warnings from unused variables, you can use the 
 	// UNUSED macro.
+	UNUSED(projection);
+	UNUSED(view);
 
 	// Enable the shaders.
 	mShaders[0]->enableShaders();
 
 	glBindVertexArray(mVao);
-	
-	auto mMat =  mModel;
-	glUniformMatrix4fv(mUniforms["Mat"], 1, GL_FALSE, &mMat[0][0]);
-	//---draw
 	glDrawArrays(GL_LINE_STRIP, 0, 11);
 
 	// Disable them.
 	mShaders[0]->disableShaders();
 
 	//draw the weight at the end of the spring
-	//mass.renderGeometry(projection, view);
+	mass.renderGeometry(projection, view);
 }
 
-void LinearSpring::EulerIntegrator(atlas::utils::Time const& t)
+void AngularSpring::EulerIntegrator(atlas::utils::Time const& t)
 {
 	mModelPosition += cos(t.deltaTime);
 }

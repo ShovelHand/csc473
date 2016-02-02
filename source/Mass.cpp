@@ -33,18 +33,19 @@ m_fmass(1.0)  //TODO: should have gui functionality to make this user set
 	// Now set up the information for our shaders.
 	std::vector<ShaderInfo> shaders
 	{
-		ShaderInfo{ GL_VERTEX_SHADER, shaderDir + "LinearSpring.vs.glsl" },  //not sure if sharing shaders is bad news or not.
-		ShaderInfo{ GL_FRAGMENT_SHADER, shaderDir + "LinearSpring.fs.glsl" }
+		ShaderInfo{ GL_VERTEX_SHADER, shaderDir + "mass.vs.glsl" },  //not sure if sharing shaders is bad news or not.
+		ShaderInfo{ GL_FRAGMENT_SHADER, shaderDir + "mass.fs.glsl" }
 	};
 
 	// Create a new shader and add it to our list.
 	mShaders.push_back(ShaderPointer(new Shader));
-
 	// Compile the shaders.
 	mShaders[0]->compileShaders(shaders);
-
 	// And link them.
 	mShaders[0]->linkShaders();
+
+	/*mUniforms.insert(UniformKey("mvpMat",
+		mShaders[0]->getUniformVariable("mvpMat")));*/
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
@@ -73,7 +74,7 @@ void Mass::renderGeometry(atlas::math::Matrix4 projection,
 	mShaders[0]->enableShaders();
 
 	glBindVertexArray(mVao);
-	glDrawArrays(GL_LINE_LOOP, 0, 11);
+	glDrawArrays(GL_LINE_LOOP, 0, 6);
 
 	// Disable them.
 	mShaders[0]->disableShaders();

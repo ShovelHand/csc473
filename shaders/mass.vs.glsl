@@ -2,9 +2,7 @@
 
 layout(location = 0) in vec4 vPosition;
 
-uniform mat4 Mat;
-
 void main()
 {
-	gl_Position = Mat * vPosition;
+	gl_Position = vPosition;
 }

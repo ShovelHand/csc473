@@ -4,13 +4,14 @@
 #include "Mass.h"
 #include <atlas/utils/Geometry.hpp>
 
-class LinearSpring : public atlas::utils::Geometry
+class AngularSpring : public atlas::utils::Geometry
 {
 public:
-	LinearSpring();
-	~LinearSpring();
+	AngularSpring();
+	~AngularSpring();
 
-	void renderGeometry();
+	void renderGeometry(atlas::math::Matrix4 projection,
+		atlas::math::Matrix4 view) override;
 
 	void updateGeometry(atlas::utils::Time const& t) override;
 
@@ -24,8 +25,8 @@ private:
 
 	//parameters that will influence the simulation
 	float m_fk;  //spring constant
-//	Mass mass;
-	
+	Mass mass;
+
 	atlas::math::Vector mRefPosition;
 	atlas::math::Vector mModelVelocity;
 	atlas::math::Vector mModelPosition;
