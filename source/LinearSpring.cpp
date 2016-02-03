@@ -6,10 +6,11 @@
 #include <atlas/core/Float.hpp>
 #include <atlas/core/Log.hpp>
 #include <math.h>
+#include <algorithm>
 
 /*ctor*/
 LinearSpring::LinearSpring() :
-m_fk(1.0),
+m_fk(10.0),
 m_fRestLength(1.0f), //spring's resting length
 m_fLength(1.0f), //spring's current length given forces
 m_fDamping(0.1f),
@@ -95,7 +96,7 @@ void LinearSpring::updateGeometry(atlas::utils::Time const& t)
 
 	//CODE GOES HERE
 	EulerIntegrator(t);
-	mModel = glm::scale(Matrix4(1.0f), mSpringScalar);
+	mModel = glm::scale(Matrix4(1.0f), -mSpringScalar) * glm::translate(Matrix4(1.0f), mModelPosition);
 }
 
 void LinearSpring::renderGeometry()
@@ -122,7 +123,10 @@ void LinearSpring::renderGeometry()
 
 void LinearSpring::EulerIntegrator(atlas::utils::Time const& t)
 {
-	float LoadForce = mass.GetMass() * 9.81f;
-	float SpringForce = m_fk * (m_fLength - m_fRestLength) - m_fDamping;
-	mSpringScalar.y -= ((LoadForce - SpringForce) + t.deltaTime)/100.f;
+	float LoadForce = mass.GetMass() * (9.81f)*t.deltaTime;
+	float SpringForce = (m_fk * (m_fLength - m_fRestLength) - m_fDamping)*t.deltaTime;
+	m_fLength = (LoadForce / SpringForce);
+	mSpringScalar.y = m_fLength;
+
+//	mModelVelocity = mModelVelocity + t.deltaTime * (mForce / mMass);
 }

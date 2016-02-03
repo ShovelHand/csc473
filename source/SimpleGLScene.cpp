@@ -5,7 +5,7 @@
 #include <atlas/core/Float.hpp>
 SimpleGLScene::SimpleGLScene() :
 mLastTime(0.0f),
-mTick(1.0f/60.0f),
+mTick(10.0f/60.0f),
 mAnimTime(0.0f)
 {
     // Initialize the matrices to identities.
