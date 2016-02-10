@@ -4,6 +4,7 @@
 #pragma once
 
 #include <atlas/utils/Scene.hpp>
+#include "Cloth.h"
 
 class SimpleGLScene : public atlas::utils::Scene
 {
@@ -20,6 +21,7 @@ private:
 	float mAnimTime;
 	float mLastTime;
 	float mTick;
+	Cloth cloth;
 };
 
 #endif
