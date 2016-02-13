@@ -88,11 +88,11 @@ void Cloth::updateGeometry(atlas::utils::Time const& t)
 		{
 			SpringDamper structDamp(vertices[i], vertices[i + 1], 100.0f, 0.2f, 1.0f);
 			summedForces += structDamp.computeForce();
-					
+
 		}
 		if (i % m_iClothWidth != 0)
 		{
-			SpringDamper structDamp(vertices[i], vertices[i -1], 100.0f, 0.2f, 1.0f);
+			SpringDamper structDamp(vertices[i], vertices[i - 1], 100.0f, 0.2f, 1.0f);
 			summedForces += structDamp.computeForce();
 		}
 		if (i + m_iClothWidth < vertices.size())
@@ -102,12 +102,12 @@ void Cloth::updateGeometry(atlas::utils::Time const& t)
 		}
 
 		//--Shear Dampeners
-		if (i % (m_iClothWidth-1) != 0  && (i + m_iClothWidth + 1) < vertices.size() || i == 0)//topleft
+		if (i % (m_iClothWidth - 1) != 0 && (i + m_iClothWidth + 1) < vertices.size() || i == 0)//topleft
 		{
 			SpringDamper shearDamp(vertices[i], vertices[i + m_iClothWidth + 1], 1.0f, 0.2f, 1.414f);
 			summedForces += shearDamp.computeForce();
 		}
-		if (i % (m_iClothWidth) > 0 && (i - m_iClothWidth-1) > 0)//bottomright
+		if (i % (m_iClothWidth) > 0 && (i - m_iClothWidth - 1) > 0)//bottomright
 		{
 			SpringDamper shearDamp(vertices[i], vertices[i - m_iClothWidth - 1], 1.0f, 0.2f, 1.414f);
 			summedForces += shearDamp.computeForce();
@@ -124,12 +124,12 @@ void Cloth::updateGeometry(atlas::utils::Time const& t)
 		}
 
 		//--bend dampers
-		if ((i % m_iClothWidth) + 2 > m_iClothWidth  && i+2 < vertices.size())//right + 1
+		if ((i % m_iClothWidth) + 2 > m_iClothWidth  && i + 2 < vertices.size())//right + 1
 		{
 			SpringDamper bendDamp(vertices[i], vertices[i + 2], 0.1f, 0.02f, 2.0f);
 			summedForces += bendDamp.computeForce();
 		}
-		if ((i % (m_iClothWidth) ) -2 >= 0)//left - 1
+		if ((i % (m_iClothWidth)) - 2 >= 0)//left - 1
 		{
 			SpringDamper bendDamp(vertices[i], vertices[i - 2], 0.10f, 0.02f, 2.0f);
 			summedForces += bendDamp.computeForce();
@@ -144,6 +144,7 @@ void Cloth::updateGeometry(atlas::utils::Time const& t)
 			SpringDamper bendDamp(vertices[i], vertices[i - 2 * m_iClothWidth], 0.10f, 0.02f, 2.0f);
 			summedForces += bendDamp.computeForce();
 		}
+
 
 
 		Vector acceleration = (1 / m_fVertexWeight)*summedForces;// *pow(t.totalTime, 2);
@@ -178,10 +179,10 @@ void Cloth::renderGeometry(atlas::math::Matrix4 projection,
 //	auto mMat = mModel;
 	glUniformMatrix4fv(mUniforms["Mat"], 1, GL_FALSE, &mMat[0][0]);
 	//---draw
-	glDrawArrays(GL_LINES, 0, triangle_vec.size());  //uncomment to see the mesh drawn as triangle strips
+	glDrawArrays(GL_TRIANGLES, 0, triangle_vec.size());  //uncomment to see the mesh drawn as triangle strips
 	
-	glPointSize(5.0);
-	glDrawArrays(GL_POINTS, 0, triangle_vec.size());
+//	glPointSize(5.0);
+//	glDrawArrays(GL_POINTS, 0, triangle_vec.size());
 
 	// Disable them.
 	mShaders[0]->disableShaders();
@@ -193,7 +194,7 @@ void Cloth::EulerIntegrator(atlas::math::Vector &pos, atlas::math::Vector veloci
 	//pin some vertices so the whole thing doesn't fall to ground
 	/*if (pos != Vector(3,float(m_iClothHeight-1),-0.5) 
 		&& pos != Vector(float(m_iClothWidth-3),float(m_iClothHeight-1), ))*/
-	if ((pos.x == 3 && pos.y == m_iClothHeight - 1) || (pos.x == m_iClothWidth - 3 && pos.y == m_iClothHeight - 1))
+	if ((pos.x == 1 && pos.y == m_iClothHeight - 1) || (pos.x == m_iClothWidth - 3 && pos.y == m_iClothHeight - 1))
 		return;
 	{
 		//update velocity
@@ -219,7 +220,7 @@ void Cloth::MakeVertices(int width, int height)
 	{
 		for (int j = 0; j < width; j++)
 		{
-			vertices.push_back(Vector(float(j), float(i), (float)rand() / (float)(RAND_MAX)));
+			vertices.push_back(Vector(float(j), float(i), 2*(float)rand() / (float)(RAND_MAX)));
 			vertexVelocity.push_back(std::make_pair(vertices.back(), Vector(0, 0, 0)));  //every vertex starts with velocity of zero.
 		}
 	}
@@ -267,4 +268,11 @@ void Cloth::BuildTriangleVec(int width, int height)
 	GLuint vpoint_id = glGetAttribLocation(mShaders[0]->getShaderProgram(), "vpoint");
 	glEnableVertexAttribArray(vpoint_id);
 	glVertexAttribPointer(vpoint_id, 3, GL_FLOAT, false, 0, 0);
+}
+
+void Cloth::reset()
+{
+	vertices.clear();
+	vertexVelocity.clear();
+	MakeVertices(m_iClothWidth, m_iClothHeight);
 }

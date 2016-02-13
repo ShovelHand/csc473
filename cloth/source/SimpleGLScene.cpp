@@ -144,7 +144,9 @@ void SimpleGLScene::keyPressEvent(int key, int scancode, int action, int mods)
 
 		case GLFW_KEY_SPACE:
 			mIsPlaying = !mIsPlaying;*/
-
+		case GLFW_KEY_V:
+			cloth.reset();
+			break;
 
 		default:
 			break;
