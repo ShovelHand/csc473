@@ -84,64 +84,69 @@ void Cloth::updateGeometry(atlas::utils::Time const& t)
 
 		//compute spring dampening forces
 		//--Structure dampeners
-		if (i % m_iClothWidth != (m_iClothWidth - 1))
+		if (i % m_iClothWidth != (m_iClothWidth - 1))//right
 		{
-			SpringDamper structDamp(vertices[i], vertices[i + 1], 100.0f, 0.2f, 1.0f);
+			SpringDamper structDamp(vertices[i], vertices[i + 1], 1000.0f, 0.01f, 1.0f);
 			summedForces += structDamp.computeForce();
 
 		}
-		if (i % m_iClothWidth != 0)
+		if (i % m_iClothWidth != 0)//left
 		{
-			SpringDamper structDamp(vertices[i], vertices[i - 1], 100.0f, 0.2f, 1.0f);
+			SpringDamper structDamp(vertices[i], vertices[i - 1], 1000.0f, 0.01f, 1.0f);
 			summedForces += structDamp.computeForce();
 		}
-		if (i + m_iClothWidth < vertices.size())
+		if (i + m_iClothWidth < vertices.size())//up
 		{
-			SpringDamper structDamp(vertices[i], vertices[i + m_iClothWidth], 100.0f, 0.2f, 1.0f);
+			SpringDamper structDamp(vertices[i], vertices[i + m_iClothWidth], 1000.0f, 0.01f, 1.0f);
+			summedForces += structDamp.computeForce();
+		}
+		if (i - m_iClothWidth > 0)//down
+		{
+			SpringDamper structDamp(vertices[i], vertices[i - m_iClothWidth], -1000.0f, 0.01f, 1.0f);
 			summedForces += structDamp.computeForce();
 		}
 
 		//--Shear Dampeners
 		if (i % (m_iClothWidth - 1) != 0 && (i + m_iClothWidth + 1) < vertices.size() || i == 0)//topleft
 		{
-			SpringDamper shearDamp(vertices[i], vertices[i + m_iClothWidth + 1], 1.0f, 0.2f, 1.414f);
+			SpringDamper shearDamp(vertices[i], vertices[i + m_iClothWidth + 1], 1.0f, 0.02f, 1.414f);
 			summedForces += shearDamp.computeForce();
 		}
 		if (i % (m_iClothWidth) > 0 && (i - m_iClothWidth - 1) > 0)//bottomright
 		{
-			SpringDamper shearDamp(vertices[i], vertices[i - m_iClothWidth - 1], 1.0f, 0.2f, 1.414f);
+			SpringDamper shearDamp(vertices[i - m_iClothWidth - 1], vertices[i], 1.0f, 0.02f, 1.414f);
 			summedForces += shearDamp.computeForce();
 		}
 		if (i % (m_iClothWidth - 1) != 0 && (i - m_iClothWidth + 1) > 0)//bottom left
 		{
-			SpringDamper shearDamp(vertices[i], vertices[i - m_iClothWidth + 1], 1.0f, 0.2f, 1.414f);
+			SpringDamper shearDamp(vertices[i - m_iClothWidth + 1], vertices[i], 1.0f, 0.02f, 1.414f);
 			summedForces += shearDamp.computeForce();
 		}
 		if (i % (m_iClothWidth - 1) != 0 && (i + m_iClothWidth - 1) < vertices.size())//top right
 		{
-			SpringDamper shearDamp(vertices[i], vertices[i + m_iClothWidth - 1], 1.0f, 0.2f, 1.414f);
+			SpringDamper shearDamp(vertices[i], vertices[i + m_iClothWidth - 1], 1.0f, 0.02f, 1.414f);
 			summedForces += shearDamp.computeForce();
 		}
 
 		//--bend dampers
 		if ((i % m_iClothWidth) + 2 > m_iClothWidth  && i + 2 < vertices.size())//right + 1
 		{
-			SpringDamper bendDamp(vertices[i], vertices[i + 2], 0.1f, 0.02f, 2.0f);
+			SpringDamper bendDamp(vertices[i], vertices[i + 2], 1.1f, 0.02f, 2.0f);
 			summedForces += bendDamp.computeForce();
 		}
 		if ((i % (m_iClothWidth)) - 2 >= 0)//left - 1
 		{
-			SpringDamper bendDamp(vertices[i], vertices[i - 2], 0.10f, 0.02f, 2.0f);
+			SpringDamper bendDamp(vertices[i], vertices[i - 2], -1.10f, 0.02f, 2.0f);
 			summedForces += bendDamp.computeForce();
 		}
 		if (i + 2 * m_iClothWidth < vertices.size())//2 rows up
 		{
-			SpringDamper bendDamp(vertices[i], vertices[i + 2 * m_iClothWidth], 0.10f, 0.02f, 2.0f);
+			SpringDamper bendDamp(vertices[i], vertices[i + 2 * m_iClothWidth], 1.10f, 0.02f, 2.0f);
 			summedForces += bendDamp.computeForce();
 		}
-		if (i - 2 * m_iClothWidth < vertices.size())//2 rows up
+		if (i - 2 * m_iClothWidth < vertices.size())//2 down
 		{
-			SpringDamper bendDamp(vertices[i], vertices[i - 2 * m_iClothWidth], 0.10f, 0.02f, 2.0f);
+			SpringDamper bendDamp(vertices[i], vertices[i - 2 * m_iClothWidth], -1.10f, 0.02f, 2.0f);
 			summedForces += bendDamp.computeForce();
 		}
 
@@ -194,23 +199,23 @@ void Cloth::EulerIntegrator(atlas::math::Vector &pos, atlas::math::Vector veloci
 	//pin some vertices so the whole thing doesn't fall to ground
 	/*if (pos != Vector(3,float(m_iClothHeight-1),-0.5) 
 		&& pos != Vector(float(m_iClothWidth-3),float(m_iClothHeight-1), ))*/
-	if ((pos.x == 1 && pos.y == m_iClothHeight - 1) || (pos.x == m_iClothWidth - 3 && pos.y == m_iClothHeight - 1))
+	if ((pos.x == 0 && pos.y == m_iClothHeight - 1) || (pos.x == m_iClothWidth - 1 && pos.y == m_iClothHeight - 1))
 		return;
-	{
-		//update velocity
-		Vector newVelocity = velocity + (accel * t.deltaTime);
 	
-		//update the vertex's stored velocity value
-		for (std::vector<std::pair<Vector, Vector> >::iterator pairIt = vertexVelocity.begin(); pairIt != vertexVelocity.end(); ++pairIt)
-		{
-			if ((*pairIt).first == (pos))
-				(*pairIt).second = newVelocity;
-		}
-
-		//update the vertex position
-		Vector newPos = pos + newVelocity*t.deltaTime;
-		pos = newPos;
+	//update velocity
+	Vector newVelocity = velocity + (accel * t.deltaTime);
+	
+	//update the vertex's stored velocity value
+	for (std::vector<std::pair<Vector, Vector> >::iterator pairIt = vertexVelocity.begin(); pairIt != vertexVelocity.end(); ++pairIt)
+	{
+		if ((*pairIt).first == (pos))
+			(*pairIt).second = newVelocity;
 	}
+
+	//update the vertex position
+	Vector newPos = pos + newVelocity*t.deltaTime;
+	pos = newPos;
+	
 }
 
 void Cloth::MakeVertices(int width, int height)
