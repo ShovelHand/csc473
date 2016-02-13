@@ -3,12 +3,12 @@
 #pragma once
 #include "ShaderPaths.hpp"
 #include <atlas/core/Macros.hpp>
-
 #include <atlas/core/Float.hpp>
 #include <atlas/core/Log.hpp>
 #include <math.h>
 #include <algorithm>
 #include <iostream>
+
 
 /*Ctor*/
 Cloth::Cloth() :
@@ -26,7 +26,7 @@ m_iClothHeight(8)
 	//original position
 //	mRefMatrix = glm::translate(Matrix4(1.0f), mRefPosition);
 	mModel = glm::translate(Matrix4(1.0f), mModelPosition);
-	mModel *= glm::scale(Matrix4(1.0f), Vector(0.1f,0.1f,0.1f));
+//	mModel *= glm::scale(Matrix4(1.0f), Vector(0.1f,0.1f,0.1f));
 
 	// Get the path where our shaders are stored.
 	std::string shaderDir = generated::ShaderPaths::getShaderDirectory();
@@ -75,25 +75,88 @@ Cloth::~Cloth()
 void Cloth::updateGeometry(atlas::utils::Time const& t)
 {
 	USING_ATLAS_MATH_NS;
-	for (std::vector<Vector>::iterator itr = vertices.begin(); itr != vertices.end(); ++itr)
+	for (int i = 0; i < vertices.size(); ++i)
 	{
-		Vector gravity(0, -2, 0);
+		//compute force of gravity on cloth
+		Vector gravity(0, -9.8, 0);
 		Vector forceGrav = m_fVertexWeight * gravity;
-		//TODO: other forces calculated here
-		
 		Vector summedForces = forceGrav;
 
-		Vector acceleration = (1 / m_fVertexWeight)*summedForces * pow(t.totalTime,2);
+		//compute spring dampening forces
+		//--Structure dampeners
+		if (i % m_iClothWidth != (m_iClothWidth - 1))
+		{
+			SpringDamper structDamp(vertices[i], vertices[i + 1], 100.0f, 0.2f, 1.0f);
+			summedForces += structDamp.computeForce();
+					
+		}
+		if (i % m_iClothWidth != 0)
+		{
+			SpringDamper structDamp(vertices[i], vertices[i -1], 100.0f, 0.2f, 1.0f);
+			summedForces += structDamp.computeForce();
+		}
+		if (i + m_iClothWidth < vertices.size())
+		{
+			SpringDamper structDamp(vertices[i], vertices[i + m_iClothWidth], 100.0f, 0.2f, 1.0f);
+			summedForces += structDamp.computeForce();
+		}
+
+		//--Shear Dampeners
+		if (i % (m_iClothWidth-1) != 0  && (i + m_iClothWidth + 1) < vertices.size() || i == 0)//topleft
+		{
+			SpringDamper shearDamp(vertices[i], vertices[i + m_iClothWidth + 1], 1.0f, 0.2f, 1.414f);
+			summedForces += shearDamp.computeForce();
+		}
+		if (i % (m_iClothWidth) > 0 && (i - m_iClothWidth-1) > 0)//bottomright
+		{
+			SpringDamper shearDamp(vertices[i], vertices[i - m_iClothWidth - 1], 1.0f, 0.2f, 1.414f);
+			summedForces += shearDamp.computeForce();
+		}
+		if (i % (m_iClothWidth - 1) != 0 && (i - m_iClothWidth + 1) > 0)//bottom left
+		{
+			SpringDamper shearDamp(vertices[i], vertices[i - m_iClothWidth + 1], 1.0f, 0.2f, 1.414f);
+			summedForces += shearDamp.computeForce();
+		}
+		if (i % (m_iClothWidth - 1) != 0 && (i + m_iClothWidth - 1) < vertices.size())//top right
+		{
+			SpringDamper shearDamp(vertices[i], vertices[i + m_iClothWidth - 1], 1.0f, 0.2f, 1.414f);
+			summedForces += shearDamp.computeForce();
+		}
+
+		//--bend dampers
+		if ((i % m_iClothWidth) + 2 > m_iClothWidth  && i+2 < vertices.size())//right + 1
+		{
+			SpringDamper bendDamp(vertices[i], vertices[i + 2], 0.1f, 0.02f, 2.0f);
+			summedForces += bendDamp.computeForce();
+		}
+		if ((i % (m_iClothWidth) ) -2 >= 0)//left - 1
+		{
+			SpringDamper bendDamp(vertices[i], vertices[i - 2], 0.10f, 0.02f, 2.0f);
+			summedForces += bendDamp.computeForce();
+		}
+		if (i + 2 * m_iClothWidth < vertices.size())//2 rows up
+		{
+			SpringDamper bendDamp(vertices[i], vertices[i + 2 * m_iClothWidth], 0.10f, 0.02f, 2.0f);
+			summedForces += bendDamp.computeForce();
+		}
+		if (i - 2 * m_iClothWidth < vertices.size())//2 rows up
+		{
+			SpringDamper bendDamp(vertices[i], vertices[i - 2 * m_iClothWidth], 0.10f, 0.02f, 2.0f);
+			summedForces += bendDamp.computeForce();
+		}
+
+
+		Vector acceleration = (1 / m_fVertexWeight)*summedForces;// *pow(t.totalTime, 2);
 		Vector velocity(0, 0, 0);
 		
 		//use pair mappings to get the current velocity of the vertex
 		for (std::vector<std::pair<Vector, Vector> >::iterator pairIt = vertexVelocity.begin(); pairIt != vertexVelocity.end(); ++pairIt)
 		{
-			if ((*pairIt).first == (*itr) && ((*pairIt).first != vertices.front()))
+			if ((*pairIt).first == (vertices[i]) && ((*pairIt).first != vertices.front()))
 				velocity = (*pairIt).second;
 		}
 
-		EulerIntegrator(*itr, velocity, acceleration, t);	
+		EulerIntegrator(vertices[i], velocity, acceleration, t);
 	}
 
 	BuildTriangleVec(m_iClothWidth, m_iClothHeight);
@@ -111,8 +174,8 @@ void Cloth::renderGeometry(atlas::math::Matrix4 projection,
 	glBindVertexArray(mVao);
 	
 
-//	auto mMat = projection * view * mModel;
-	auto mMat = mModel;
+	auto mMat = projection * view * mModel;
+//	auto mMat = mModel;
 	glUniformMatrix4fv(mUniforms["Mat"], 1, GL_FALSE, &mMat[0][0]);
 	//---draw
 	glDrawArrays(GL_LINES, 0, triangle_vec.size());  //uncomment to see the mesh drawn as triangle strips
@@ -127,20 +190,26 @@ void Cloth::renderGeometry(atlas::math::Matrix4 projection,
 void Cloth::EulerIntegrator(atlas::math::Vector &pos, atlas::math::Vector velocity, atlas::math::Vector accel, atlas::utils::Time const& t)
 {
 	USING_ATLAS_MATH_NS;
-	//update velocity
-	Vector newVelocity = velocity + (accel * t.deltaTime);
-	
-	//update the vertex's stored velocity value
-	for (std::vector<std::pair<Vector, Vector> >::iterator pairIt = vertexVelocity.begin(); pairIt != vertexVelocity.end(); ++pairIt)
+	//pin some vertices so the whole thing doesn't fall to ground
+	/*if (pos != Vector(3,float(m_iClothHeight-1),-0.5) 
+		&& pos != Vector(float(m_iClothWidth-3),float(m_iClothHeight-1), ))*/
+	if ((pos.x == 3 && pos.y == m_iClothHeight - 1) || (pos.x == m_iClothWidth - 3 && pos.y == m_iClothHeight - 1))
+		return;
 	{
-		if ((*pairIt).first == (pos))
-			(*pairIt).second = newVelocity;
-	}
-
-	//update the vertex position
-	Vector newPos = pos + newVelocity*t.deltaTime;
-	pos = newPos;
+		//update velocity
+		Vector newVelocity = velocity + (accel * t.deltaTime);
 	
+		//update the vertex's stored velocity value
+		for (std::vector<std::pair<Vector, Vector> >::iterator pairIt = vertexVelocity.begin(); pairIt != vertexVelocity.end(); ++pairIt)
+		{
+			if ((*pairIt).first == (pos))
+				(*pairIt).second = newVelocity;
+		}
+
+		//update the vertex position
+		Vector newPos = pos + newVelocity*t.deltaTime;
+		pos = newPos;
+	}
 }
 
 void Cloth::MakeVertices(int width, int height)
@@ -150,12 +219,13 @@ void Cloth::MakeVertices(int width, int height)
 	{
 		for (int j = 0; j < width; j++)
 		{
-			vertices.push_back(Vector(float(j), float(i), 0.0));
+			vertices.push_back(Vector(float(j), float(i), (float)rand() / (float)(RAND_MAX)));
 			vertexVelocity.push_back(std::make_pair(vertices.back(), Vector(0, 0, 0)));  //every vertex starts with velocity of zero.
 		}
 	}
 
 	BuildTriangleVec(m_iClothWidth, m_iClothHeight);
+
 	//make the pixel coordinates for the height map texture
 	//for (std::vector<Vector>::iterator itr = triangle_vec.begin(); itr != triangle_vec.end(); ++itr)
 	//	vtexcoord.push_back(Vector((*itr).x() / float(width), (*itr).z() / float(height),0.0f));
@@ -179,19 +249,14 @@ void Cloth::BuildTriangleVec(int width, int height)
 			int bottomright = bottomleft + 1;
 			//the upper left triangle
 			triangle_vec.push_back(vertices[topleft]);
-			//	vertexMap.push_back(std::make_pair(triangle_vec.back(), vertices[topleft]));
 			triangle_vec.push_back(vertices[topright]);
-			//	vertexMap.push_back(std::make_pair(triangle_vec.back(), vertices[topright]));
 			triangle_vec.push_back(vertices[bottomleft]);
-			//		vertexMap.push_back(std::make_pair(triangle_vec.back(), vertices[bottomleft]));
 			//the lower right triangle
 			triangle_vec.push_back(vertices[topright]);
-			//		vertexMap.push_back(std::make_pair(triangle_vec.back(), vertices[topright]));
 			triangle_vec.push_back(vertices[bottomright]);
-			//		vertexMap.push_back(std::make_pair(triangle_vec.back(), vertices[bottomright]));
 			triangle_vec.push_back(vertices[bottomleft]);
-			//		vertexMap.push_back(std::make_pair(triangle_vec.back(), vertices[bottomleft]));
 		}
+
 	}
 	//update OpenGL memory buffer, or nothing happens on screen.
 	//--buffer

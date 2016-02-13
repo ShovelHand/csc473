@@ -2,7 +2,7 @@
 #pragma once
 #include <atlas/utils/Geometry.hpp>
 #include "atlas/Atlas.hpp"
-
+#include "SpringDamper.h"
 
 class Cloth : public atlas::utils::Geometry
 {
@@ -23,9 +23,8 @@ private:
 	std::vector<atlas::math::Vector> vertices;
 	std::vector<atlas::math::Vector> triangle_vec; //defines the order in which vertices are used in the triangle strips
 	std::vector<atlas::math::Vector> vtexcoord;  //texture coords in case the cloth ever gets a texture
-
-	std::vector<std::pair<atlas::math::Vector, atlas::math::Vector> > vertexMap;
-	std::vector<std::pair<atlas::math::Vector, atlas::math::Vector> > vertexVelocity;
+	std::vector<std::pair<atlas::math::Vector, atlas::math::Vector> > vertexVelocity; //stores the current velocity vector of each vertex
+	std::vector<SpringDamper> dampers;  //collection of structural, shear and bend spring dampeners
 	
 
 	atlas::math::Vector mRefPosition;

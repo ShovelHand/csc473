@@ -42,7 +42,8 @@ void SimpleGLScene::updateScene(double time)
 void SimpleGLScene::renderScene()
 {
 	glClearColor(1.0f, 1.0f, 1.0f,0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
 	
 	mView = mCamera.getCameraMatrix();
 	cloth.renderGeometry(mProjection, mView);
@@ -54,54 +55,54 @@ void SimpleGLScene::mousePressEvent(int button, int action, int modifiers,
 {
 	USING_ATLAS_MATH_NS;
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && modifiers == GLFW_MOD_ALT)
-	{
-		if (action == GLFW_PRESS)
-		{
-			mIsDragging = true;
+	//if (button == GLFW_MOUSE_BUTTON_LEFT && modifiers == GLFW_MOD_ALT)
+	//{
+	//	if (action == GLFW_PRESS)
+	//	{
+			mIsDragging = !mIsDragging;
 			mCamera.mouseDown(Point2(xPos, yPos),
 				MayaCamera::CameraMovements::TUMBLE);
-		}
-		else
-		{
-			mIsDragging = false;
-			mCamera.mouseUp();
-		}
-	}
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE && modifiers == GLFW_MOD_ALT)
-	{
-		if (action == GLFW_PRESS)
-		{
-			mIsDragging = true;
-			mCamera.mouseDown(Point2(xPos, yPos),
-				MayaCamera::CameraMovements::TRACK);
-		}
-		else
-		{
-			mIsDragging = false;
-			mCamera.mouseUp();
-		}
-	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT && modifiers == GLFW_MOD_ALT)
-	{
-		if (action == GLFW_PRESS)
-		{
-			// first click.
-			mIsDragging = true;
-			mCamera.mouseDown(Point2(xPos, yPos),
-				MayaCamera::CameraMovements::DOLLY);
-		}
-		else
-		{
-			mIsDragging = false;
-			mCamera.mouseUp();
-		}
-	}
-	else if (action != GLFW_PRESS)
-	{
-		mIsDragging = false;
-		mCamera.mouseUp();
-	}
+	//	}
+	//	else
+	//	{
+	//		mIsDragging = false;
+	//		mCamera.mouseUp();
+	//	}
+	//}
+	//else if (button == GLFW_MOUSE_BUTTON_MIDDLE && modifiers == GLFW_MOD_ALT)
+	//{
+	//	if (action == GLFW_PRESS)
+	//	{
+	//		mIsDragging = true;
+	//		mCamera.mouseDown(Point2(xPos, yPos),
+	//			MayaCamera::CameraMovements::TRACK);
+	//	}
+	//	else
+	//	{
+	//		mIsDragging = false;
+	//		mCamera.mouseUp();
+	//	}
+	//}
+	//else if (button == GLFW_MOUSE_BUTTON_RIGHT && modifiers == GLFW_MOD_ALT)
+	//{
+	//	if (action == GLFW_PRESS)
+	//	{
+	//		// first click.
+	//		mIsDragging = true;
+	//		mCamera.mouseDown(Point2(xPos, yPos),
+	//			MayaCamera::CameraMovements::DOLLY);
+	//	}
+	//	else
+	//	{
+	//		mIsDragging = false;
+	//		mCamera.mouseUp();
+	//	}
+	//}
+	//else if (action != GLFW_PRESS)
+	//{
+	//	mIsDragging = false;
+	//	mCamera.mouseUp();
+	//}
 }
 
 void SimpleGLScene::mouseMoveEvent(double xPos, double yPos)
