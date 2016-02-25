@@ -6,6 +6,7 @@
 #include <atlas/utils/Scene.hpp>
 #include "MayaCamera.hpp"
 #include "Spline.hpp"
+#include "Ground.h"
 
 class SimpleGLScene : public atlas::utils::Scene
 {
@@ -34,6 +35,7 @@ private:
 	float mAnimLength;
 	bool mFlyby;
 	MayaCamera mCamera;
+	Ground ground;
 };
 
 #endif

@@ -19,9 +19,18 @@ mFlyby(false)
 {
     // Initialize the matrices to identities.
     mProjection = atlas::math::Matrix4(1.0f);
-	mProjection = glm::perspective(glm::radians(45.0),
+	mProjection = glm::perspective(glm::radians(0.0),
 		1.0, 1.0, 1000.0);
     mView = atlas::math::Matrix4(1.0f);
+
+//	Vector dirVec(100, 0, 100);  //camera orientation
+//	Vector eye(0, 8, 0);				//camera translation in world space
+
+	//Viewing matrices
+	Matrix4 VIEW;
+	Matrix4 PROJ;
+	Matrix4 MODEL;
+
 }
 
 SimpleGLScene::~SimpleGLScene()
@@ -65,6 +74,7 @@ void SimpleGLScene::renderScene()
 	
 	mView = mCamera.getCameraMatrix();
 	mSpline.renderGeometry(mProjection, mView);
+	ground.renderGeometry(mProjection, mView);
 	
 	
 }
@@ -74,54 +84,54 @@ void SimpleGLScene::mousePressEvent(int button, int action, int modifiers,
 {
 	USING_ATLAS_MATH_NS;
 
-	//if (button == GLFW_MOUSE_BUTTON_LEFT && modifiers == GLFW_MOD_ALT)
-	//{
-	//	if (action == GLFW_PRESS)
-	//	{
+	if (button == GLFW_MOUSE_BUTTON_LEFT)// && modifiers == GLFW_MOD_ALT)
+	{
+		if (action == GLFW_PRESS)
+		{
 			mIsDragging = !mIsDragging;
 			mCamera.mouseDown(Point2(xPos, yPos),
 				MayaCamera::CameraMovements::TUMBLE);
-	//	}
-	//	else
-	//	{
-	//		mIsDragging = false;
-	//		mCamera.mouseUp();
-	//	}
-	//}
-	//else if (button == GLFW_MOUSE_BUTTON_MIDDLE && modifiers == GLFW_MOD_ALT)
-	//{
-	//	if (action == GLFW_PRESS)
-	//	{
-	//		mIsDragging = true;
-	//		mCamera.mouseDown(Point2(xPos, yPos),
-	//			MayaCamera::CameraMovements::TRACK);
-	//	}
-	//	else
-	//	{
-	//		mIsDragging = false;
-	//		mCamera.mouseUp();
-	//	}
-	//}
-	//else if (button == GLFW_MOUSE_BUTTON_RIGHT && modifiers == GLFW_MOD_ALT)
-	//{
-	//	if (action == GLFW_PRESS)
-	//	{
-	//		// first click.
-	//		mIsDragging = true;
-	//		mCamera.mouseDown(Point2(xPos, yPos),
-	//			MayaCamera::CameraMovements::DOLLY);
-	//	}
-	//	else
-	//	{
-	//		mIsDragging = false;
-	//		mCamera.mouseUp();
-	//	}
-	//}
-	//else if (action != GLFW_PRESS)
-	//{
-	//	mIsDragging = false;
-	//	mCamera.mouseUp();
-	//}
+		}
+		else
+		{
+			mIsDragging = false;
+			mCamera.mouseUp();
+		}
+	}
+	else if (button == GLFW_MOUSE_BUTTON_MIDDLE)// && modifiers == GLFW_MOD_ALT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			mIsDragging = true;
+			mCamera.mouseDown(Point2(xPos, yPos),
+				MayaCamera::CameraMovements::TRACK);
+		}
+		else
+		{
+			mIsDragging = false;
+			mCamera.mouseUp();
+		}
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && modifiers == GLFW_MOD_ALT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			// first click.
+			mIsDragging = true;
+			mCamera.mouseDown(Point2(xPos, yPos),
+				MayaCamera::CameraMovements::DOLLY);
+		}
+		else
+		{
+			mIsDragging = false;
+			mCamera.mouseUp();
+		}
+	}
+	else if (action != GLFW_PRESS)
+	{
+		mIsDragging = false;
+		mCamera.mouseUp();
+	}
 }
 
 void SimpleGLScene::mouseMoveEvent(double xPos, double yPos)
@@ -136,16 +146,23 @@ void SimpleGLScene::keyPressEvent(int key, int scancode, int action, int mods)
 {
 	UNUSED(scancode);
 	UNUSED(mods);
+	if (action == GLFW_RELEASE)
+		return; ///< only act on PRESS
+
+	float delta = 2.0f;  ///the step amount for wasd
+//	atlas::math::Vector xaxis = dirVec.normalized().cross(vec3(0, 1, 0));
 
 	if (action == GLFW_PRESS)
 	{
+		atlas::math::Matrix4 translateMat;
+		translateMat = (Matrix4(1.0f));
 		switch (key)
 		{
 		case GLFW_KEY_R:
 			mCamera.resetCamera();
 			break;
 
-		case GLFW_KEY_S:
+		case GLFW_KEY_Q:
 			mSpline.showSpline();
 			break;
 
@@ -160,7 +177,28 @@ void SimpleGLScene::keyPressEvent(int key, int scancode, int action, int mods)
 		case GLFW_KEY_P:
 			mSpline.showSplinePoints();
 			break;
-
+			case GLFW_KEY_W:
+				mCamera.translateTrackVector(delta);
+			
+		//	eye += dirVec*delta;
+	//		dirVec += dirVec*delta;
+			break;
+			case GLFW_KEY_S:
+				mCamera.translateTrackVector(-delta);
+		//	eye -= dirVec*delta;
+		//	dirVec -= dirVec*delta;
+			break;
+			case GLFW_KEY_A:
+	//		eye -= xaxis;
+	//		dirVec -= xaxis;
+			break;
+			case GLFW_KEY_D:
+	//		eye += xaxis;
+		//	dirVec += xaxis;
+			break;
+			case GLFW_KEY_I:
+	//		printf("eye = %f, %f, %f dirVec = %f, %f, %f \n", eye.x(), eye.y(), eye.z(), dirVec.x(), dirVec.y(), dirVec.z());
+			break;
 		/*case GLFW_KEY_SPACE:
 			mIsPlaying = !mIsPlaying;*/
 		case GLFW_KEY_V:

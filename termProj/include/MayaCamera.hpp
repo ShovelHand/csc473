@@ -20,6 +20,9 @@ public:
     atlas::math::Matrix4 getCameraMatrix() override;
 
 	void setTrackVector(atlas::math::Matrix4 mat);
+	atlas::math::Vector getTrackVector();
+	void translateTrackVector(float delta);
+
 
 private:
     struct MayaCameraImpl;
