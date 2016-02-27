@@ -4,6 +4,7 @@
 #include <atlas/core/Macros.hpp>
 #include <atlas/core/Float.hpp>
 #include <iostream>
+#include "FrameBuffer.h"
 
 USING_ATLAS_GL_NS;
 USING_ATLAS_MATH_NS;
@@ -20,7 +21,7 @@ mFlyby(false)
     // Initialize the matrices to identities.
     mProjection = atlas::math::Matrix4(1.0f);
 	mProjection = glm::perspective(glm::radians(0.0),
-		1.0, 1.0, 1000.0);
+		1.0, 1.0, 10.0);
     mView = atlas::math::Matrix4(1.0f);
 
 //	Vector dirVec(100, 0, 100);  //camera orientation
@@ -30,6 +31,9 @@ mFlyby(false)
 	Matrix4 VIEW;
 	Matrix4 PROJ;
 	Matrix4 MODEL;
+
+	//initialize framebuffer
+	FrameBuffer fb(800, 800);
 
 }
 
@@ -74,6 +78,8 @@ void SimpleGLScene::renderScene()
 	
 	mView = mCamera.getCameraMatrix();
 	mSpline.renderGeometry(mProjection, mView);
+
+	//TODO: reflective fram buffer stuff goes here
 	ground.renderGeometry(mProjection, mView);
 	
 	

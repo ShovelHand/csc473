@@ -48,9 +48,7 @@ include_directories(
     ${ATLAS_INCLUDE_DIRS}
     ${ASSIGNMENT_GENERATED_ROOT}
     ${ASSIGNMENT_INCLUDE_ROOT})
-	 
-set(CMAKE_FIND_QUIETLY TRUE)
-include(cmake/ConfigureEigen.cmake)
+
 
 # This next step is optional and is purely for aesthetic
 # purposes within the IDE. Essentially, it tells the IDE

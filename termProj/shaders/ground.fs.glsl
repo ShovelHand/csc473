@@ -3,8 +3,11 @@
 uniform vec3 fColour;
 
 out vec4 colour;
+in vec2 uv;
+uniform sampler2D tex;
+//uniform sampler2D tex_mirror;
 
 void main()
 {
-	colour = vec4(0.5, 0.25, 0.3, 1);
+	colour = texture(tex,uv).rgba;
 }
