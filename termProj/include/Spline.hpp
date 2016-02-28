@@ -55,6 +55,7 @@ private:
     bool mShowSplinePoints;
     bool mShowSpline;
     bool mIsInterpolationDone;
+	atlas::math::Matrix4 mRefPosition;
 };
 
 #endif

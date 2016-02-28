@@ -1,5 +1,5 @@
 #pragma once
-
+#include <iostream>
 class FrameBuffer{
 protected:
 	bool _init;
@@ -18,9 +18,9 @@ public:
 	///--- Warning: ovverrides viewport!!
 	void bind() {
 		glViewport(0, 0, _width, _height);
-		glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
+	//	glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
 		const GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
-		glDrawBuffers(1 /*length of buffers[]*/, buffers);
+	//	glDrawBuffers(1 /*length of buffers[]*/, buffers);
 	}
 
 	void unbind() {
@@ -51,7 +51,7 @@ public:
 				GL_RGB, GL_UNSIGNED_BYTE, NULL); ///< how to load from buffer
 		}
 
-		///--- Create render buffer (for depth channel)
+		/////--- Create render buffer (for depth channel)
 		{
 			glGenRenderbuffers(1, &_depth_rb);
 			glBindRenderbuffer(GL_RENDERBUFFER, _depth_rb);
@@ -71,6 +71,7 @@ public:
 		}
 
 		return _color_tex;
+		
 	}
 
 	void cleanup() {
@@ -81,20 +82,6 @@ public:
 	}
 
 public:
-	void display_color_attachment(const char* title) {
-#ifdef WITH_OPENCV 
-		///--- Fetch from opengl
-		cv::Mat image = cv::Mat(_height, _width, CV_8UC3, cv::Scalar(0));
-		glBindTexture(GL_TEXTURE_2D, _color_tex);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		///--- Postprocess before showing/saving
-		cv::flip(image, image, 0 /*flip rows*/); ///< OpenGL / OpenCV top left origin
-		cv::cvtColor(image, image, CV_BGRA2RGBA); ///< OpenCV uses BGRA
-		cv::imshow(title, image);
-		// cv::waitKey(0); ///< wait for key to be pressed (not necessary with opengl loop)
-#else
-		std::cout << "!!!WARNING: sorry, you do not seem to have OpenCV properly configured." << std::endl;
-#endif
-	}
+	
+	
 };

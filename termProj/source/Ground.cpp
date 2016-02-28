@@ -2,7 +2,6 @@
 
 #pragma once
 #include "ShaderPaths.hpp"
-#include "TextureManager.h"
 #include <atlas/core/Macros.hpp>
 #include <atlas/core/GLFW.hpp>
 #include "TextureLoader.h"
@@ -10,16 +9,17 @@
 typedef unsigned char BYTE;
 /*ctor*/
 Ground::Ground() :
-mModelPosition(-10, 0, 0)
+mModelPosition(1, -3, 1),
+bMirrorTexSet(false)
 {
 	USING_ATLAS_GL_NS;
 	USING_ATLAS_MATH_NS;
 
 	glGenVertexArrays(1, &mVao);
 	glBindVertexArray(mVao);
-	
+
 	mModel *= glm::scale(Matrix4(1.0f), Vector(10, 1, 10));
-//	mModel *= glm::translate(Matrix4(1.0f), Vector(1, 10, 1));
+	//	mModel *= glm::translate(Matrix4(1.0f), Vector(1, 10, 1));
 	// Get the path where our shaders are stored.
 	std::string shaderDir = generated::ShaderPaths::getShaderDirectory();
 
@@ -42,7 +42,6 @@ mModelPosition(-10, 0, 0)
 		/*V2*/ +1.0f, 0.0f, -1.0f,
 		/*V3*/ -1.0f, 0.0f, +1.0f,
 		/*V4*/ +1.0f, 0.0f, +1.0f
-
 	};
 
 	//--buffer
@@ -54,7 +53,9 @@ mModelPosition(-10, 0, 0)
 	GLuint vpoint_id = glGetAttribLocation(mShaders[0]->getShaderProgram(), "vpoint");
 	glEnableVertexAttribArray(vpoint_id);
 	glVertexAttribPointer(vpoint_id, 3, GL_FLOAT, false, 0, 0);
-
+}
+void Ground::init(GLuint texture = -1)
+{
 	///--- Texture coordinates
 	{
 		const GLfloat vtexcoord[] = { 
@@ -62,9 +63,6 @@ mModelPosition(-10, 0, 0)
 			/*V2*/ 1.0f, 0.0f,
 			/*V3*/ 0.0f, 1.0f,
 			/*V4*/ 1.0f, 1.0f };
-
-		//update OpenGL memory buffer, or nothing happens on screen.
-	
 
 		///--- Buffer
 		glGenBuffers(1, &mBuffer);
@@ -83,14 +81,13 @@ mModelPosition(-10, 0, 0)
 	//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 		const char * filename = "C:\\Users\\Alexander\\Documents\\csc_assignments\\csc473\\assgts/termProj/shaders/textures/lena512.bmp";
 		_tex = loadBMP_custom(filename);
-		//	_tex_mirror = (tex_mirror == -1) ? _tex : tex_mirror;
+		_tex_mirror = (texture == -1) ? _tex : texture;
 		///--- Texture uniforms
 		GLuint tex_id = glGetUniformLocation(mShaders[0]->getShaderProgram(), "tex");
-		glUniform1i(tex_id, 0);// /*GL_TEXTURE0*/);
+		glUniform1i(tex_id, 0);// /*GL_TEXTURE0*/);A5QcY6F..bmp
 
-	
-		//GLuint tex_mirror_id = glGetUniformLocation(_pid, "tex_mirror");
-		//glUniform1i(tex_mirror_id, 1 /*GL_TEXTURE1*/);
+		GLuint tex_mirror_id = glGetUniformLocation(mShaders[0]->getShaderProgram(), "tex_mirror");
+		glUniform1i(tex_mirror_id, 1 /*GL_TEXTURE1*/);
 	}
 
 	GLuint mMat = mShaders[0]->getUniformVariable("Mat");
@@ -127,6 +124,8 @@ void Ground::renderGeometry(atlas::math::Matrix4 projection,
 	///--- Bind textures
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, _tex);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, _tex_mirror);
 
 	atlas::math::Matrix4 mvp = projection * view * mModel;
 	//load transformations

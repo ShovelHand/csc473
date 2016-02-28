@@ -4,37 +4,31 @@
 #include <atlas/core/Macros.hpp>
 #include <atlas/core/Float.hpp>
 #include <iostream>
-#include "FrameBuffer.h"
 
 USING_ATLAS_GL_NS;
 USING_ATLAS_MATH_NS;
 
 SimpleGLScene::SimpleGLScene() :
 mLastTime(0.0f),
-mTick(10.0f/60.0f),
+mTick(10.0f / 60.0f),
 mAnimTime(0.0f),
 mIsDragging(false),
 mAnimLength(10.0f),
 mSpline(int(mAnimLength * 60.0f)),
-mFlyby(false)
+mFlyby(false),
+fb(800, 800)
+
 {
-    // Initialize the matrices to identities.
-    mProjection = atlas::math::Matrix4(1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_MULTISAMPLE);
+	// Initialize the matrices to identities.
+	mProjection = atlas::math::Matrix4(1.0f);
 	mProjection = glm::perspective(glm::radians(0.0),
 		1.0, 1.0, 10.0);
-    mView = atlas::math::Matrix4(1.0f);
-
-//	Vector dirVec(100, 0, 100);  //camera orientation
-//	Vector eye(0, 8, 0);				//camera translation in world space
-
-	//Viewing matrices
-	Matrix4 VIEW;
-	Matrix4 PROJ;
-	Matrix4 MODEL;
-
-	//initialize framebuffer
-	FrameBuffer fb(800, 800);
-
+	mView = atlas::math::Matrix4(1.0f);
+	mView *= glm::translate(atlas::math::Matrix4(1.0f), Vector(1, 1, 1));
+	fb_tex = fb.init(true);
+	ground.init(fb_tex);
 }
 
 SimpleGLScene::~SimpleGLScene()
@@ -56,33 +50,40 @@ void SimpleGLScene::updateScene(double time)
 		if (mFlyby)
 		{
 			mSpline.updateGeometry(mTime);
-			
-			
 			auto point = mSpline.getSplinePosition();
 			auto mat = glm::translate(atlas::math::Matrix4(1.0f), point);
-			
 			mCamera.setTrackVector(mat);
 
 		}
 	}
-	
-	
-
 }
 
 void SimpleGLScene::renderScene()
 {
-	glClearColor(1.0f, 1.0f, 1.0f,0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(1.0f, 1.0f, 1.0f, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
-	
-	mView = mCamera.getCameraMatrix();
-	mSpline.renderGeometry(mProjection, mView);
 
-	//TODO: reflective fram buffer stuff goes here
+	mView = mCamera.getCameraMatrix();
+	
+
+	//TODO: reflective frame buffer stuff goes here
+	Vector cam_pos = Vector(3,-1,5);
+	Vector cam_mirror_pos = cam_pos;
+	cam_mirror_pos.y *= -1;
+	Matrix4 view_mirror = mCamera.getCameraMatrix();
+	//view_mirror *= glm::translate(Matrix4(1.0f), Vector(1, 1, 5));
+	view_mirror = mCamera.lookAt(cam_mirror_pos, Vector(1,1,1), Vector(0, 1, 0));
+	
+	fb.bind();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	mSpline.renderGeometry(mProjection, mView);
+	fb.unbind();
+
 	ground.renderGeometry(mProjection, mView);
 	
 	
+
 }
 
 void SimpleGLScene::mousePressEvent(int button, int action, int modifiers,
@@ -109,8 +110,8 @@ void SimpleGLScene::mousePressEvent(int button, int action, int modifiers,
 		if (action == GLFW_PRESS)
 		{
 			mIsDragging = true;
-			mCamera.mouseDown(Point2(xPos, yPos),
-				MayaCamera::CameraMovements::TRACK);
+			mCamera.mouseDown(Point2(xPos, -yPos),
+				MayaCamera::CameraMovements::DOLLY);
 		}
 		else
 		{
@@ -148,6 +149,12 @@ void SimpleGLScene::mouseMoveEvent(double xPos, double yPos)
 	}
 }
 
+void SimpleGLScene::mouseScrollEvent(double xOffset, double yOffset)
+{
+//	std::cout << "x: " << xOffset << "y: " << yOffset << std::endl;
+	mCamera.inOutDolly(yOffset);
+}
+
 void SimpleGLScene::keyPressEvent(int key, int scancode, int action, int mods)
 {
 	UNUSED(scancode);
@@ -156,8 +163,9 @@ void SimpleGLScene::keyPressEvent(int key, int scancode, int action, int mods)
 		return; ///< only act on PRESS
 
 	float delta = 2.0f;  ///the step amount for wasd
-//	atlas::math::Vector xaxis = dirVec.normalized().cross(vec3(0, 1, 0));
-
+	//	atlas::math::Vector xaxis = dirVec.normalized().cross(vec3(0, 1, 0));
+	Vector4 dirVecHomo = Vector4(1.0f, 1.0f, 1.0f, 0.0f)* mView;
+	Vector dirVec = Vector(dirVecHomo);
 	if (action == GLFW_PRESS)
 	{
 		atlas::math::Matrix4 translateMat;
@@ -183,34 +191,31 @@ void SimpleGLScene::keyPressEvent(int key, int scancode, int action, int mods)
 		case GLFW_KEY_P:
 			mSpline.showSplinePoints();
 			break;
-			case GLFW_KEY_W:
-				mCamera.translateTrackVector(delta);
-			
-		//	eye += dirVec*delta;
-	//		dirVec += dirVec*delta;
+		case GLFW_KEY_W:
+			mCamera.translateTrackVector(delta);
+			mCamera.setTrackVector(glm::translate(Matrix4(1.0f), Vector(1, 1, 1)));
 			break;
-			case GLFW_KEY_S:
-				mCamera.translateTrackVector(-delta);
-		//	eye -= dirVec*delta;
-		//	dirVec -= dirVec*delta;
+		case GLFW_KEY_S:
+			mCamera.translateTrackVector(delta);
+			mCamera.setTrackVector(glm::translate(Matrix4(1.0f), Vector(1, 1, -1)));
 			break;
-			case GLFW_KEY_A:
-	//		eye -= xaxis;
-	//		dirVec -= xaxis;
+		case GLFW_KEY_A:
+			//		eye -= xaxis;
+			//		dirVec -= xaxis;
 			break;
-			case GLFW_KEY_D:
-	//		eye += xaxis;
-		//	dirVec += xaxis;
+		case GLFW_KEY_D:
+			//		eye += xaxis;
+			//	dirVec += xaxis;
 			break;
-			case GLFW_KEY_I:
-	//		printf("eye = %f, %f, %f dirVec = %f, %f, %f \n", eye.x(), eye.y(), eye.z(), dirVec.x(), dirVec.y(), dirVec.z());
+		case GLFW_KEY_I:
+			//		printf("eye = %f, %f, %f dirVec = %f, %f, %f \n", eye.x(), eye.y(), eye.z(), dirVec.x(), dirVec.y(), dirVec.z());
 			break;
-		/*case GLFW_KEY_SPACE:
+			/*case GLFW_KEY_SPACE:
 			mIsPlaying = !mIsPlaying;*/
 		case GLFW_KEY_V:
 			break;
 		case GLFW_KEY_F:
-	
+
 			flyby();
 			break;
 

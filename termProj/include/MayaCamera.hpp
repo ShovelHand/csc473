@@ -2,7 +2,6 @@
 #define LAB04_INCLUDE_MAYA_CAMERA_HPP
 
 #pragma once
-
 #include <atlas/utils/Camera.hpp>
 #include <memory>
 
@@ -22,7 +21,8 @@ public:
 	void setTrackVector(atlas::math::Matrix4 mat);
 	atlas::math::Vector getTrackVector();
 	void translateTrackVector(float delta);
-
+	void inOutDolly(int val);
+	atlas::math::Matrix4 lookAt(atlas::math::Vector & eye, atlas::math::Vector & center, atlas::math::Vector & up);
 
 private:
     struct MayaCameraImpl;

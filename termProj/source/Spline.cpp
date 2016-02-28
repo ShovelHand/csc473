@@ -92,7 +92,7 @@ void Spline::renderGeometry(atlas::math::Matrix4 projection,
     mShaders[0]->enableShaders();
 
     glBindVertexArray(mVao);
-
+	
     Matrix4 mvp = projection * view * mModel;
     glUniformMatrix4fv(mUniforms["uMVP"], 1, GL_FALSE, &mvp[0][0]);
 

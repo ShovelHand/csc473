@@ -12,19 +12,20 @@ public:
 	~Ground();
 
 	void renderGeometry(atlas::math::Matrix4 projection,
-		atlas::math::Matrix4 view) override;
+		atlas::math::Matrix4 view);
 
 	void updateGeometry();
-//	GLuint loadBMP_custom(const char * image);
+	void setFrameBufferTex(GLuint texture){ _tex_mirror = texture; bMirrorTexSet = true; }
+	void init(GLuint texture);
 
 private:
 
 	GLuint mVao;
 	GLuint mBuffer;
 	GLuint _tex; ///< Texture ID
+	bool bMirrorTexSet;
 	GLuint _tex_mirror; ///< Texture ID of mirror texture
 
 	atlas::math::Matrix4 mRefMatrix;
 	atlas::math::Vector mModelPosition;
-
 };
