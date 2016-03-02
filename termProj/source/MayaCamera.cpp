@@ -32,6 +32,7 @@ struct MayaCamera::MayaCameraImpl
 
         dollyMatrix = translate(Matrix4(1.0f), Vector(0, 0, -1.0f * dolly));
         trackMatrix = Matrix4(1.0f);
+		trackMatrix *= glm::translate(Matrix4(1.0f), trackVector);
         tumbleMatrix = 
             rotate(Matrix4(1.0f), radians(tumbleVector.x), Vector(1, 0, 0)) *
             rotate(Matrix4(1.0f), radians(tumbleVector.y), Vector(0, 1, 0));
@@ -112,22 +113,14 @@ atlas::math::Matrix4 MayaCamera::getCameraMatrix()
     return mImpl->dollyMatrix * mImpl->trackMatrix * mImpl->tumbleMatrix;
 }
 
-void MayaCamera::setTrackVector(atlas::math::Matrix4 mat)
+void MayaCamera::setTrackVector(atlas::math::Vector eye)
 {
 	USING_ATLAS_MATH_NS;
 	USING_GLM_NS;
-	mImpl->dolly = 0.0;
-	//std::cout << mImpl->trackVector.x <<  ":" <<mImpl->trackVector.y << ":" << mImpl->trackVector.x << std::endl;
-	mImpl->tumbleVector.x = -0.5;
-	mImpl->tumbleVector.y = -0.25;
-	mImpl->tumbleMatrix =
-		rotate(mat4(1.0), radians(mImpl->tumbleVector.x), vec3(1, 0, 0)) *
-		rotate(mat4(1.0), radians(mImpl->tumbleVector.y), vec3(0, 1, 0));
-	
-	//set rotation
-	mImpl->trackMatrix = mat;
-	
+	mImpl->trackVector = eye;
+	mImpl->resetMatrices();
 }
+
 void MayaCamera::inOutDolly(int val)
 {
 	mImpl->dolly -=  val;
@@ -140,8 +133,8 @@ void MayaCamera::translateTrackVector(float delta)
 	mImpl->dolly -= 0.0008f * delta;
 	mImpl->dollyMatrix =
 		translate(Matrix4(1.0), Vector(0, 0, -1.0f * mImpl->dolly));
-	
 }
+
 atlas::math::Matrix4 MayaCamera::lookAt(atlas::math::Vector & eye, atlas::math::Vector & center, atlas::math::Vector & up){
 //	typedef Eigen::Matrix<typename Derived::Scalar, 4, 4> Matrix4;
 //	typedef Eigen::Matrix<typename Derived::Scalar, 3, 1> Vector3;

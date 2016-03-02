@@ -18,7 +18,7 @@ public:
     void resetCamera() override;
     atlas::math::Matrix4 getCameraMatrix() override;
 
-	void setTrackVector(atlas::math::Matrix4 mat);
+	void setTrackVector(atlas::math::Vector eye);
 	atlas::math::Vector getTrackVector();
 	void translateTrackVector(float delta);
 	void inOutDolly(int val);
